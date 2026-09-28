@@ -1,31 +1,84 @@
 # VICC Cloud Task Manager
 
-Kleine SaaS-Demoanwendung für die VICC-Praxisarbeit. Die Anwendung stellt eine Weboberfläche und eine REST-API zur Aufgabenverwaltung bereit.
+Der **VICC Cloud Task Manager** ist eine kleine cloudbasierte Demoanwendung für die VICC-Praxisarbeit.
+
+Die Anwendung ermöglicht das Erstellen, Anzeigen, Aktualisieren und Löschen von Aufgaben über eine Weboberfläche und eine REST-API. Der Schwerpunkt des Projekts liegt auf Containerisierung, Public Cloud, persistenter Datenhaltung, Automatisierung und Infrastructure as Code.
+
+## Architektur
+
+```text
+Benutzer
+   |
+   v
+Azure Container Instance
+   |
+   v
+Azure Blob Storage
+   |
+   +-- tasks.json
+
+GitHub -> GitHub Actions -> Docker Hub -> Azure Container Instance
+
+Terraform -> Microsoft Azure
+```
+
+Verwendete Technologien:
+
+- Python / Flask
+- Gunicorn
+- Docker
+- Docker Hub
+- GitHub Actions
+- Microsoft Azure
+- Azure Container Instances
+- Azure Blob Storage
+- Terraform
+
+Die Anwendung wird in der **Microsoft Azure Public Cloud** betrieben und aus Benutzersicht als **Software as a Service (SaaS)** bereitgestellt.
 
 ## Funktionen
 
 - Aufgaben erstellen
 - Aufgaben anzeigen
-- Aufgaben als erledigt/offen markieren
+- Aufgaben als erledigt oder offen markieren
 - Aufgaben löschen
-- Filter für alle/offene/erledigte Aufgaben
+- Aufgaben nach Status filtern
 - REST-API
-- Health-Endpunkt
-- Lokaler JSON-Speicher für Entwicklung
+- Health Check
+- lokales JSON-Backend für Entwicklung und Tests
 - Azure Blob Storage für den Cloud-Betrieb
 
-## API
+## Projektstruktur
 
-| Methode | Endpoint | Zweck |
-|---|---|---|
-| GET | `/api/health` | Zustand der Anwendung und des Speichers |
-| GET | `/api/info` | Anwendungsversion und Storage-Backend |
-| GET | `/api/tasks` | Aufgaben abrufen |
-| POST | `/api/tasks` | Aufgabe erstellen |
-| PATCH/PUT | `/api/tasks/{id}` | Aufgabe ändern |
-| DELETE | `/api/tasks/{id}` | Aufgabe löschen |
+```text
+vicc-cloud-task-manager/
+├── .github/
+│   └── workflows/
+│       └── docker-publish.yml
+├── app/
+│   ├── data/
+│   ├── static/
+│   ├── templates/
+│   ├── app.py
+│   ├── storage.py
+│   ├── Dockerfile
+│   └── requirements.txt
+├── terraform/
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── variables.tf
+│   ├── versions.tf
+│   └── .terraform.lock.hcl
+├── .gitignore
+└── README.md
+```
 
 ## Lokal starten
+
+Voraussetzungen:
+
+- Python 3
+- pip
 
 ```bash
 cd app
@@ -40,21 +93,77 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Danach: `http://localhost:8000`
+Die Anwendung ist danach unter folgendem Endpunkt erreichbar:
 
-Standardmässig wird `data/tasks.json` verwendet.
+```text
+http://localhost:8000
+```
+
+Standardmässig wird lokal `data/tasks.json` verwendet.
+
+## REST-API
+
+| Methode | Endpoint | Beschreibung |
+|---|---|---|
+| `GET` | `/api/health` | Status von Anwendung und Storage |
+| `GET` | `/api/info` | Anwendungsinformationen |
+| `GET` | `/api/tasks` | Aufgaben abrufen |
+| `POST` | `/api/tasks` | Aufgabe erstellen |
+| `PATCH/PUT` | `/api/tasks/{id}` | Aufgabe aktualisieren |
+| `DELETE` | `/api/tasks/{id}` | Aufgabe löschen |
+
+Beispiel:
+
+```bash
+curl http://localhost:8000/api/health
+```
 
 ## Docker
 
+Öffentliches Docker-Hub-Repository:
+
+```text
+pakshetpanda/vicc-cloud-task-manager
+```
+
+Image lokal bauen:
+
 ```bash
 cd app
-docker build -t vicc-cloud-task-manager:1.0 .
-docker run --rm -p 8000:8000 -e STORAGE_BACKEND=local vicc-cloud-task-manager:1.0
+docker build -t vicc-cloud-task-manager:local .
 ```
+
+Container lokal starten:
+
+```bash
+docker run --rm   -p 8000:8000   -e STORAGE_BACKEND=local   vicc-cloud-task-manager:local
+```
+
+## GitHub Actions
+
+Der Workflow unter
+
+```text
+.github/workflows/docker-publish.yml
+```
+
+baut und testet das Docker Image automatisch und veröffentlicht es anschliessend auf Docker Hub.
+
+Dabei werden unter anderem folgende Schritte ausgeführt:
+
+1. Docker Image bauen
+2. Container starten
+3. `/api/health` prüfen
+4. REST-API mit einem Test-Task testen
+5. Image als `latest` und `1.0.<Run-Nummer>` zu Docker Hub übertragen
+
+Für Docker Hub werden die GitHub Secrets `DOCKERHUB_USERNAME` und `DOCKERHUB_TOKEN` verwendet.
 
 ## Azure Storage
 
-Für Azure wird die Anwendung mit folgenden Umgebungsvariablen gestartet:
+Im Azure-Betrieb verwendet die Anwendung Azure Blob Storage.
+
+Relevante Umgebungsvariablen:
 
 ```text
 STORAGE_BACKEND=azure
@@ -63,36 +172,51 @@ AZURE_STORAGE_CONTAINER=taskmanager
 AZURE_STORAGE_BLOB=tasks.json
 ```
 
-Der Storage Connection String darf nicht im Git-Repository gespeichert werden.
+Der Storage Connection String wird nicht im Repository gespeichert.
 
-## Architekturbezug zur Praxisarbeit
+## Azure Deployment mit Terraform
 
-Die Anwendung ist absichtlich klein gehalten, damit der Schwerpunkt auf der Cloud-Infrastruktur liegt. Der Container ist zustandslos; persistente Aufgabendaten werden im Azure Blob Storage abgelegt. Dadurch lassen sich Themen wie SaaS, Public Cloud, Containerisierung, Datenmanagement, Infrastructure as Code, Skalierbarkeit, Hochverfügbarkeit und Portierung direkt an der umgesetzten Lösung diskutieren.
+Die Infrastruktur wird mit Terraform bereitgestellt.
 
-## Docker Image über GitHub Actions bauen und veröffentlichen
+Erstellt werden:
 
-Docker Desktop ist für den Build nicht erforderlich. Bei jedem Push auf `main`, der Dateien unter `app/` verändert, baut GitHub Actions das Docker Image auf einem GitHub Runner, startet es kurz, prüft die API und veröffentlicht das erfolgreiche Image anschliessend auf Docker Hub.
+- Resource Group `rg-vicc-taskmanager`
+- Azure Container Instance `aci-vicc-taskmanager`
+- Storage Account `stvicctaskmanager01`
+- Blob Container `taskmanager`
 
-Workflow: `.github/workflows/docker-publish.yml`
+Deployment:
 
-### Voraussetzungen
+```bash
+cd terraform
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
 
-1. Auf Docker Hub ein **öffentliches** Repository mit dem Namen `vicc-cloud-task-manager` erstellen.
-2. Auf Docker Hub einen Personal Access Token mit Schreibberechtigung für das Repository erstellen.
-3. In GitHub unter `Settings -> Secrets and variables -> Actions` zwei Repository-Secrets anlegen:
-   - `DOCKERHUB_USERNAME` = Docker-Hub-Benutzername
-   - `DOCKERHUB_TOKEN` = Docker-Hub-Personal-Access-Token
+Nach erfolgreichem Deployment können die Endpunkte mit Terraform ausgegeben werden:
 
-Der Token wird nicht im Repository gespeichert.
+```bash
+terraform output -raw task_manager_url
+terraform output -raw api_health_url
+```
 
-### Ablauf des Workflows
+## Datenhaltung
 
-1. Source Code auschecken.
-2. Docker Image aus `app/Dockerfile` bauen.
-3. Container mit lokalem JSON-Backend starten.
-4. `/api/health` prüfen.
-5. Über die API einen Test-Task erstellen und wieder abrufen.
-6. Bei erfolgreichem Test bei Docker Hub anmelden.
-7. Images als `latest` und `1.0.<Run-Nummer>` veröffentlichen.
+Die Anwendung unterstützt zwei Storage-Backends:
 
-Der Workflow kann zusätzlich in GitHub unter `Actions -> Build, test and publish Docker image -> Run workflow` manuell gestartet werden.
+- `LocalJsonTaskStore` für lokale Entwicklung
+- `AzureBlobTaskStore` für den Cloud-Betrieb
+
+In Azure werden die Aufgaben im Blob `tasks.json` gespeichert.
+
+Die Persistenz wurde getestet, indem die Azure Container Instance gestoppt und erneut gestartet wurde. Die zuvor gespeicherten Aufgaben waren danach weiterhin verfügbar.
+
+## Hinweise zur Architektur
+
+Der aktuelle IST-Zustand verwendet eine einzelne Azure Container Instance.
+
+Dadurch besteht auf Applikationsebene keine Redundanz. Für eine horizontale Skalierung wären mehrere Instanzen und eine dafür geeignete Datenhaltung erforderlich, da das aktuelle einzelne JSON-Dokument nicht für parallele Schreibzugriffe mehrerer Instanzen ausgelegt ist.
+
+Durch die Containerisierung ist die Anwendung grundsätzlich auf andere Container-Laufzeitumgebungen portierbar. Die Terraform-Konfiguration ist jedoch Azure-spezifisch.
