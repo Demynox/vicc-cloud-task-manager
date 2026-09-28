@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets / environment
+.env
+*.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Runtime data
+app/data/tasks.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
