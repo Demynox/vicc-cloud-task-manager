@@ -1,45 +1,93 @@
 <!doctype html>
 <html lang="de">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Ein einfacher cloudbasierter Task Manager für die VICC-Praxisarbeit.">
+
+  <meta
+    name="description"
+    content="Ein einfacher cloudbasierter Task Manager für die VICC-Praxisarbeit."
+  >
+
   <title>{{ app_name }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+
+  <!-- Statische Ressourcen werden über Flask eingebunden. -->
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+  >
+
+  <script
+    src="{{ url_for('static', filename='app.js') }}"
+    defer
+  ></script>
 </head>
+
 <body>
+
   <main class="shell">
+
+    <!-- Kopfbereich mit Anwendungsname und Service-Status. -->
     <header class="hero">
       <div>
         <p class="eyebrow">VICC · SaaS Demo</p>
+
         <h1>Cloud Task Manager</h1>
-        <p class="subtitle">Aufgaben einfach erfassen, erledigen und verwalten.</p>
+
+        <p class="subtitle">
+          Aufgaben einfach erfassen, erledigen und verwalten.
+        </p>
       </div>
-      <div class="status-pill" id="serviceStatus" aria-live="polite">
+
+      <div
+        class="status-pill"
+        id="serviceStatus"
+        aria-live="polite"
+      >
         <span class="status-dot"></span>
         <span>Prüfe Service …</span>
       </div>
     </header>
 
-    <section class="stats" aria-label="Aufgabenübersicht">
+
+    <!-- Übersicht über offene und erledigte Tasks. -->
+    <section
+      class="stats"
+      aria-label="Aufgabenübersicht"
+    >
       <article class="stat-card">
         <span class="stat-label">Offen</span>
         <strong id="openCount">0</strong>
       </article>
+
       <article class="stat-card">
         <span class="stat-label">Erledigt</span>
         <strong id="doneCount">0</strong>
       </article>
+
       <article class="stat-card">
         <span class="stat-label">Gesamt</span>
         <strong id="totalCount">0</strong>
       </article>
     </section>
 
+
+    <!-- Hauptbereich zur Verwaltung der Tasks. -->
     <section class="panel">
-      <form id="taskForm" class="task-form">
-        <label for="taskTitle" class="sr-only">Neue Aufgabe</label>
+
+      <!-- Formular zum Erstellen eines neuen Tasks. -->
+      <form
+        id="taskForm"
+        class="task-form"
+      >
+        <label
+          for="taskTitle"
+          class="sr-only"
+        >
+          Neue Aufgabe
+        </label>
+
         <input
           id="taskTitle"
           name="title"
@@ -49,31 +97,107 @@
           placeholder="Neue Aufgabe eingeben …"
           required
         >
-        <button type="submit" class="primary-button">Hinzufügen</button>
+
+        <button
+          type="submit"
+          class="primary-button"
+        >
+          Hinzufügen
+        </button>
       </form>
 
+
+      <!-- Filter und Anzeige des aktuell verwendeten Storage-Backends. -->
       <div class="toolbar">
-        <div class="filters" role="group" aria-label="Aufgaben filtern">
-          <button type="button" class="filter-button active" data-filter="all">Alle</button>
-          <button type="button" class="filter-button" data-filter="open">Offen</button>
-          <button type="button" class="filter-button" data-filter="done">Erledigt</button>
+
+        <div
+          class="filters"
+          role="group"
+          aria-label="Aufgaben filtern"
+        >
+          <button
+            type="button"
+            class="filter-button active"
+            data-filter="all"
+          >
+            Alle
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="open"
+          >
+            Offen
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="done"
+          >
+            Erledigt
+          </button>
         </div>
-        <span id="storageInfo" class="storage-info">Speicher: –</span>
+
+        <span
+          id="storageInfo"
+          class="storage-info"
+        >
+          Speicher: –
+        </span>
       </div>
 
-      <div id="message" class="message" role="status" aria-live="polite"></div>
-      <ul id="taskList" class="task-list" aria-live="polite"></ul>
-      <div id="emptyState" class="empty-state" hidden>
+
+      <!-- Dynamisch durch app.js befüllte Bereiche. -->
+      <div
+        id="message"
+        class="message"
+        role="status"
+        aria-live="polite"
+      ></div>
+
+      <ul
+        id="taskList"
+        class="task-list"
+        aria-live="polite"
+      ></ul>
+
+
+      <!-- Wird angezeigt, wenn keine Aufgaben vorhanden sind. -->
+      <div
+        id="emptyState"
+        class="empty-state"
+        hidden
+      >
         <div class="empty-icon">✓</div>
+
         <h2>Keine Aufgaben vorhanden</h2>
-        <p>Erfasse oben eine neue Aufgabe.</p>
+
+        <p>
+          Erfasse oben eine neue Aufgabe.
+        </p>
       </div>
+
     </section>
 
+
+    <!-- Versionsinformation und direkter Link zum Health-Endpunkt. -->
     <footer>
-      <span>Cloud Task Manager · Version {{ app_version }}</span>
-      <a href="/api/health" target="_blank" rel="noreferrer">API Health</a>
+      <span>
+        Cloud Task Manager · Version {{ app_version }}
+      </span>
+
+      <a
+        href="/api/health"
+        target="_blank"
+        rel="noreferrer"
+      >
+        API Health
+      </a>
     </footer>
+
   </main>
+
 </body>
 </html>
