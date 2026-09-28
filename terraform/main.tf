@@ -50,7 +50,7 @@ resource "azurerm_container_group" "taskmanager" {
     }
 
     environment_variables = {
-      STORAGE_BACKEND        = "azure"
+      STORAGE_BACKEND         = "azure"
       AZURE_STORAGE_CONTAINER = azurerm_storage_container.taskmanager.name
       AZURE_STORAGE_BLOB      = "tasks.json"
     }
